@@ -355,6 +355,7 @@ dependencies:
   - r-nortest=1.0_4
   - r-numderiv=2016.8_1.1
   - r-openssl=2.3.4
+  - r-optparse=1.7.5
   - r-ordinal=2023.12_4.1
   - r-otel=0.2.0
   - r-pan=1.9
