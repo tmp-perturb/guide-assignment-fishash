@@ -15,6 +15,7 @@ Omnibenchmark CLI contract:
 Output: <output_dir>/assignments.csv   (cell,gRNA,UMI_counts,log_pval,odds_ratio_regularized)
 """
 import argparse
+import json
 import os
 import shutil
 import subprocess
@@ -23,6 +24,18 @@ import tempfile
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 SCRIPTS = os.path.join(HERE, "scripts")
+THREAD_ENV = {"OMP_NUM_THREADS": "1", "OPENBLAS_NUM_THREADS": "1",
+              "MKL_NUM_THREADS": "1", "NUMEXPR_NUM_THREADS": "1"}
+
+
+def _standardize_monitoring(src, dst, method):
+    with open(src) as fh:
+        raw = json.load(fh)
+    summary = raw.get("summary", raw)
+    with open(dst, "w") as fh:
+        json.dump({"method": method, "assignment_wall_s": summary.get("total_wall_s"),
+                   "peak_rss_mb": summary.get("peak_rss_mb"),
+                   "logical_cpu_cores": 8, "numerical_library_threads": 1}, fh, indent=2)
 
 
 def _mex_dir(matrix, barcodes, features, workdir):
@@ -68,14 +81,16 @@ def main():
                "--min-count", str(args.min_count),
                "--refit", str(args.refit)]
         print("+ " + " ".join(cmd), flush=True)
-        subprocess.run(cmd, check=True)
+        subprocess.run(cmd, check=True, env={**os.environ, **THREAD_ENV})
 
         produced = os.path.join(rout, "assignments.csv")
         if not os.path.exists(produced):
             sys.exit(f"ERROR: fishash did not produce {produced}")
         shutil.copyfile(produced, out_csv)
+        _standardize_monitoring(os.path.join(rout, "monitoring.json"),
+                                os.path.join(out, "monitoring.json"), args.name)
 
-    print("guide_assignment_fishash: wrote assignments.csv")
+    print("guide_assignment_fishash: wrote assignments.csv and monitoring.json")
 
 
 if __name__ == "__main__":
