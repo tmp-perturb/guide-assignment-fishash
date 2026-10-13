@@ -15,11 +15,6 @@
 #       --min-count 2 \
 #       --refit 10
 #
-# Note: .libPaths must include /home/yunzliu/R/library
-
-# ── Lib path ──────────────────────────────────────────────────────────
-.libPaths(c("/home/yunzliu/R/library", .libPaths()))
-
 # ── Parse args ────────────────────────────────────────────────────────
 library(optparse)
 
@@ -49,9 +44,18 @@ suppressPackageStartupMessages({
     library(Matrix)
     library(S4Vectors)
     library(SummarizedExperiment)
-    library(fishash)
+    library(dplyr)
+    library(sparseMatrixStats)
     library(jsonlite)
 })
+
+# Exact benchmarked implementation, bundled with the module so execution does
+# not depend on a personal R library or a runtime download.
+script_arg <- grep("^--file=", commandArgs(trailingOnly=FALSE), value=TRUE)
+script_dir <- dirname(normalizePath(sub("^--file=", "", script_arg[[1]])))
+fishash_vendor <- file.path(script_dir, "..", "vendor", "fishash", "R")
+source(file.path(fishash_vendor, "impute_masked_counts.R"), local=globalenv())
+source(file.path(fishash_vendor, "fishash.R"), local=globalenv())
 
 # ── Monitoring helpers ────────────────────────────────────────────────
 T0 <- proc.time()["elapsed"]
@@ -70,7 +74,7 @@ monitor <- list(
     system  = list(
         hostname        = Sys.info()["nodename"],
         r_version       = paste(R.version$major, R.version$minor, sep="."),
-        fishash_version = as.character(packageVersion("fishash")),
+        fishash_version = "0.99.0 (vendored, upstream 74220e8)",
         cpu_count       = as.integer(parallel::detectCores())
     )
 )

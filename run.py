@@ -2,9 +2,9 @@
 """Omnibenchmark module: guide_assignment_fishash.
 
 Fishash guide assignment (one-sided Fisher exact + GS-FDR + Simpson refit).
-Re-orchestration only: the vendored R script `scripts/run_fishash.R` is called
-UNCHANGED via Rscript (the assignment_fishash env provides r-base + fishash +
-Matrix). The injected MEX trio is presented as merged_{matrix,barcodes,features}
+Re-orchestration only: the R runner calls the pinned fishash 0.99.0 source
+vendored in this module. The Conda environment provides R and the declared
+dependencies. The injected MEX trio is presented as merged_{matrix,barcodes,features}
 and read directly in R. Deterministic (no RNG).
 
 Omnibenchmark CLI contract:
